@@ -11,7 +11,7 @@ import { Connection } from 'mongoose';
         uri: configService.get<string>('database.uri'),
         connectionFactory: (connection: Connection) => {
           const logger = new Logger('Database');
-          if (connection.readyState === 1) {
+          if (Number(connection.readyState) === 1) {
             logger.log('MongoDB connected successfully');
           }
           connection.on('connected', () => {

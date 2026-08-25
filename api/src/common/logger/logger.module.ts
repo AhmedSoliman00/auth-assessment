@@ -16,14 +16,14 @@ import { LoggerModule as PinoLoggerModule } from 'nestjs-pino';
               'req.body.password',
             ],
             serializers: {
-              req(req: any) {
+              req(req: Record<string, unknown>) {
                 return {
                   id: req.id,
                   method: req.method,
                   url: req.url,
                 };
               },
-              res(res: any) {
+              res(res: Record<string, unknown>) {
                 return {
                   statusCode: res.statusCode,
                 };

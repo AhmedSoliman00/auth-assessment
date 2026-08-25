@@ -41,8 +41,6 @@ export class UserRepository implements IUserRepository {
     userId: string,
     refreshTokenHash: string | null,
   ): Promise<void> {
-    await this.userModel
-      .findByIdAndUpdate(userId, { refreshTokenHash })
-      .exec();
+    await this.userModel.findByIdAndUpdate(userId, { refreshTokenHash }).exec();
   }
 }

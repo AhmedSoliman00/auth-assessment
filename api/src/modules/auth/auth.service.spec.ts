@@ -10,9 +10,9 @@ jest.mock('bcrypt');
 
 describe('AuthService', () => {
   let service: AuthService;
-  let mockUserRepo: any;
-  let mockJwtService: any;
-  let mockConfigService: any;
+  let mockUserRepo: Record<string, jest.Mock>;
+  let mockJwtService: Record<string, jest.Mock>;
+  let mockConfigService: { get: jest.Mock };
 
   const mockUser = {
     _id: { toString: () => 'user-id-123' },
@@ -73,7 +73,7 @@ describe('AuthService', () => {
 
   describe('signup', () => {
     it('should throw ConflictException if user already exists', async () => {
-      mockUserRepo.findByEmail.mockResolvedValue(mockUser);
+      mockUserRepo['findByEmail'].mockResolvedValue(mockUser);
 
       await expect(
         service.signup({
@@ -85,8 +85,8 @@ describe('AuthService', () => {
     });
 
     it('should hash password and create user successfully', async () => {
-      mockUserRepo.findByEmail.mockResolvedValue(null);
-      mockUserRepo.create.mockResolvedValue(mockUser);
+      mockUserRepo['findByEmail'].mockResolvedValue(null);
+      mockUserRepo['create'].mockResolvedValue(mockUser);
 
       const result = await service.signup({
         name: 'Test User',
@@ -94,7 +94,7 @@ describe('AuthService', () => {
         password: 'Password123!',
       });
 
-      expect(mockUserRepo.create).toHaveBeenCalledWith({
+      expect(mockUserRepo['create']).toHaveBeenCalledWith({
         name: 'Test User',
         email: 'test@example.com',
         passwordHash: 'hashed-string',
@@ -106,24 +106,30 @@ describe('AuthService', () => {
 
   describe('signin', () => {
     it('should throw UnauthorizedException if user is not found', async () => {
-      mockUserRepo.findByEmailWithPasswordHash.mockResolvedValue(null);
+      mockUserRepo['findByEmailWithPasswordHash'].mockResolvedValue(null);
 
       await expect(
-        service.signin({ email: 'wrong@example.com', password: 'Password123!' }),
+        service.signin({
+          email: 'wrong@example.com',
+          password: 'Password123!',
+        }),
       ).rejects.toThrow(UnauthorizedException);
     });
 
     it('should throw UnauthorizedException if password does not match', async () => {
-      mockUserRepo.findByEmailWithPasswordHash.mockResolvedValue(mockUser);
+      mockUserRepo['findByEmailWithPasswordHash'].mockResolvedValue(mockUser);
       (bcrypt.compare as jest.Mock).mockResolvedValue(false);
 
       await expect(
-        service.signin({ email: 'test@example.com', password: 'WrongPassword' }),
+        service.signin({
+          email: 'test@example.com',
+          password: 'WrongPassword',
+        }),
       ).rejects.toThrow(UnauthorizedException);
     });
 
     it('should return tokens on valid credentials', async () => {
-      mockUserRepo.findByEmailWithPasswordHash.mockResolvedValue(mockUser);
+      mockUserRepo['findByEmailWithPasswordHash'].mockResolvedValue(mockUser);
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
 
       const result = await service.signin({
@@ -139,7 +145,7 @@ describe('AuthService', () => {
   describe('logout', () => {
     it('should revoke refresh token hash by updating it to null', async () => {
       await service.logout('user-id-123');
-      expect(mockUserRepo.updateRefreshTokenHash).toHaveBeenCalledWith(
+      expect(mockUserRepo['updateRefreshTokenHash']).toHaveBeenCalledWith(
         'user-id-123',
         null,
       );
