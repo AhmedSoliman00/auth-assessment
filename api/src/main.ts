@@ -3,6 +3,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { Logger } from 'nestjs-pino';
+import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
@@ -13,8 +14,14 @@ async function bootstrap() {
   // Use Pino Logger
   app.useLogger(logger);
 
+  // Cookie Parser Middleware
+  app.use(cookieParser());
+
   // Configure Production-grade CORS
-  const clientUrl = configService.get<string>('CLIENT_URL', 'http://localhost:5173');
+  const clientUrl = configService.get<string>(
+    'CLIENT_URL',
+    'http://localhost:5173',
+  );
   app.enableCors({
     origin: [clientUrl],
     credentials: true,
@@ -38,9 +45,9 @@ async function bootstrap() {
   const isProd = configService.get<string>('NODE_ENV') === 'production';
   if (!isProd) {
     const config = new DocumentBuilder()
-      .setTitle('NestJS API')
+      .setTitle('Authentication API')
       .setDescription(
-        'Production REST API with MongoDB, JWT Access/Refresh tokens, and Pino Logger',
+        'Authentication API with JWT access and refresh token rotation.',
       )
       .setVersion('1.0')
       .addBearerAuth()
