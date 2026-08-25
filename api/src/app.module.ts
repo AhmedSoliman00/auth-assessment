@@ -1,8 +1,15 @@
-import { Module, Logger } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { MongooseModule } from '@nestjs/mongoose';
 import { LoggerModule } from 'nestjs-pino';
-import * as Joi from 'joi';
+
+import configuration from './config/configuration';
+import databaseConfig from './config/database.config';
+import { envValidationSchema } from './config/env.validation';
+
+import { DatabaseModule } from './common/database/database.module';
+import { AuthModule } from './modules/auth/auth.module';
+import { UsersModule } from './modules/users/users.module';
+
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
@@ -10,18 +17,8 @@ import { AppService } from './app.service';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      validationSchema: Joi.object({
-        PORT: Joi.number().default(3000),
-        NODE_ENV: Joi.string()
-          .valid('development', 'production', 'test')
-          .default('development'),
-        MONGODB_URI: Joi.string().required(),
-        CLIENT_URL: Joi.string().default('http://localhost:5173'),
-        JWT_ACCESS_SECRET: Joi.string().required(),
-        JWT_ACCESS_EXPIRES_IN: Joi.string().default('15m'),
-        JWT_REFRESH_SECRET: Joi.string().required(),
-        JWT_REFRESH_EXPIRES_IN: Joi.string().default('7d'),
-      }),
+      load: [configuration, databaseConfig],
+      validationSchema: envValidationSchema,
     }),
     LoggerModule.forRootAsync({
       inject: [ConfigService],
@@ -36,29 +33,9 @@ import { AppService } from './app.service';
         };
       },
     }),
-    MongooseModule.forRootAsync({
-      inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        uri: config.get<string>('MONGODB_URI'),
-        connectionFactory: (connection) => {
-          const logger = new Logger('Database');
-          if (connection.readyState === 1) {
-            logger.log('MongoDB connected successfully');
-          }
-          connection.on('connected', () => {
-            logger.log('MongoDB connected successfully');
-          });
-          connection.on('error', (err: unknown) => {
-            const errorMsg = err instanceof Error ? err.message : String(err);
-            logger.error(`MongoDB connection failed: ${errorMsg}`);
-          });
-          connection.on('disconnected', () => {
-            logger.warn('MongoDB disconnected');
-          });
-          return connection;
-        },
-      }),
-    }),
+    DatabaseModule,
+    AuthModule,
+    UsersModule,
   ],
   controllers: [AppController],
   providers: [AppService],
