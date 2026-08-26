@@ -41,9 +41,10 @@ async function bootstrap() {
     }),
   );
 
-  // Swagger Setup (Enabled in Dev/Test)
-  const isProd = configService.get<string>('NODE_ENV') === 'production';
-  if (!isProd) {
+  // Swagger Setup (Enabled by default, can be toggled via ENABLE_SWAGGER)
+  const enableSwagger =
+    configService.get<string>('ENABLE_SWAGGER', 'true') === 'true';
+  if (enableSwagger) {
     const config = new DocumentBuilder()
       .setTitle('Authentication API')
       .setDescription(

@@ -30,6 +30,7 @@ services:
     environment:
       PORT: ${PORT:-3000}
       NODE_ENV: ${NODE_ENV:-production}
+      ENABLE_SWAGGER: ${ENABLE_SWAGGER:-true}
       MONGODB_URI: ${MONGODB_URI:-mongodb://mongodb:27017/easygenerator}
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
       JWT_ACCESS_EXPIRES_IN: ${JWT_ACCESS_EXPIRES_IN:-15m}
