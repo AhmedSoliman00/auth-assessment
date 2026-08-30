@@ -28,6 +28,7 @@ import { RefreshTokenGuard } from './guards/refresh-token.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { JwtPayload } from './strategies/access-token.strategy';
 import type { RefreshJwtPayload } from './strategies/refresh-token.strategy';
+import { Throttle } from '@nestjs/throttler';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -62,6 +63,7 @@ export class AuthController {
     type: AuthResponseDto,
   })
   @ApiConflictResponse({ description: 'Email already registered' })
+  @Throttle({ default: { ttl: 60_000, limit: 5 } })
   @Post('signup')
   async signup(
     @Body() dto: SignupDto,
@@ -78,6 +80,7 @@ export class AuthController {
     type: AuthResponseDto,
   })
   @ApiUnauthorizedResponse({ description: 'Invalid credentials' })
+  @Throttle({ default: { ttl: 60_000, limit: 5 } })
   @Post('signin')
   @HttpCode(HttpStatus.OK)
   async signin(
@@ -107,6 +110,7 @@ export class AuthController {
     type: AuthResponseDto,
   })
   @ApiUnauthorizedResponse({ description: 'Invalid or revoked refresh token' })
+  @Throttle({ default: { ttl: 60_000, limit: 5 } })
   @UseGuards(RefreshTokenGuard)
   @Post('refresh')
   @HttpCode(HttpStatus.OK)

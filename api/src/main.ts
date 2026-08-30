@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { Logger } from 'nestjs-pino';
 import cookieParser from 'cookie-parser';
+import helmet from 'helmet';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
@@ -13,6 +14,9 @@ async function bootstrap() {
 
   // Use Pino Logger
   app.useLogger(logger);
+
+  // Security Headers (helmet must come first)
+  app.use(helmet());
 
   // Cookie Parser Middleware
   app.use(cookieParser());
@@ -41,7 +45,7 @@ async function bootstrap() {
     }),
   );
 
-  // Swagger Setup (Enabled by default, can be toggled via ENABLE_SWAGGER)
+  // Swagger Setup (Enabled by default for testing, can be toggled via ENABLE_SWAGGER)
   const enableSwagger =
     configService.get<string>('ENABLE_SWAGGER', 'true') === 'true';
   if (enableSwagger) {
