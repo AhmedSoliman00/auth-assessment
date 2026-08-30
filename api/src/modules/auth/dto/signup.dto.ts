@@ -1,11 +1,14 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 import {
   IsEmail,
   IsNotEmpty,
   IsString,
   Matches,
+  MaxLength,
   MinLength,
 } from 'class-validator';
+import sanitizeHtml from 'sanitize-html';
 
 export class SignupDto {
   @ApiProperty({
@@ -15,6 +18,12 @@ export class SignupDto {
   @IsString()
   @IsNotEmpty()
   @MinLength(3, { message: 'Name must be at least 3 characters' })
+  @MaxLength(100, { message: 'Name must not exceed 100 characters' })
+  @Transform(({ value }: { value: string }) =>
+    typeof value === 'string'
+      ? sanitizeHtml(value, { allowedTags: [], allowedAttributes: {} }).trim()
+      : value,
+  )
   name!: string;
 
   @ApiProperty({
@@ -23,6 +32,9 @@ export class SignupDto {
   })
   @IsEmail({}, { message: 'Email must be valid' })
   @IsNotEmpty()
+  @Transform(({ value }: { value: string }) =>
+    typeof value === 'string' ? value.trim().toLowerCase() : value,
+  )
   email!: string;
 
   @ApiProperty({
